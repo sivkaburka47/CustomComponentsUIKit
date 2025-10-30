@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E638450C2EB3F059007E1983 /* CarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E638450B2EB3F059007E1983 /* CarouselView.swift */; };
+		E638450E2EB3F072007E1983 /* CarouselCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E638450D2EB3F072007E1983 /* CarouselCell.swift */; };
+		E63845102EB3F0D9007E1983 /* FavoritesMovieCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E638450F2EB3F0D9007E1983 /* FavoritesMovieCell.swift */; };
 		E6A091C62EB3DE8A0093CD08 /* TableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6A091C52EB3DE8A0093CD08 /* TableViewController.swift */; };
 		E6A091C82EB3DE980093CD08 /* CollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6A091C72EB3DE980093CD08 /* CollectionViewController.swift */; };
 		E6BDA5F42EB3D9B00047D1A1 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6BDA5EA2EB3D9B00047D1A1 /* AppDelegate.swift */; };
@@ -17,6 +20,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		E638450B2EB3F059007E1983 /* CarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarouselView.swift; sourceTree = "<group>"; };
+		E638450D2EB3F072007E1983 /* CarouselCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarouselCell.swift; sourceTree = "<group>"; };
+		E638450F2EB3F0D9007E1983 /* FavoritesMovieCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesMovieCell.swift; sourceTree = "<group>"; };
 		E6A091C52EB3DE8A0093CD08 /* TableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableViewController.swift; sourceTree = "<group>"; };
 		E6A091C72EB3DE980093CD08 /* CollectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionViewController.swift; sourceTree = "<group>"; };
 		E6BDA5D22EB3D9A50047D1A1 /* CustomComponentsApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CustomComponentsApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -38,6 +44,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		E638450A2EB3F04F007E1983 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				E638450B2EB3F059007E1983 /* CarouselView.swift */,
+				E638450D2EB3F072007E1983 /* CarouselCell.swift */,
+				E638450F2EB3F0D9007E1983 /* FavoritesMovieCell.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
 		E6A091BF2EB3DD9F0093CD08 /* Modules */ = {
 			isa = PBXGroup;
 			children = (
@@ -85,6 +101,7 @@
 		E6A091C42EB3DE130093CD08 /* CollectionScreen */ = {
 			isa = PBXGroup;
 			children = (
+				E638450A2EB3F04F007E1983 /* Components */,
 				E6A091C72EB3DE980093CD08 /* CollectionViewController.swift */,
 			);
 			path = CollectionScreen;
@@ -192,6 +209,9 @@
 				E6BDA5F52EB3D9B00047D1A1 /* SceneDelegate.swift in Sources */,
 				E6BDA5F62EB3D9B00047D1A1 /* MainViewController.swift in Sources */,
 				E6A091C62EB3DE8A0093CD08 /* TableViewController.swift in Sources */,
+				E638450E2EB3F072007E1983 /* CarouselCell.swift in Sources */,
+				E638450C2EB3F059007E1983 /* CarouselView.swift in Sources */,
+				E63845102EB3F0D9007E1983 /* FavoritesMovieCell.swift in Sources */,
 				E6A091C82EB3DE980093CD08 /* CollectionViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

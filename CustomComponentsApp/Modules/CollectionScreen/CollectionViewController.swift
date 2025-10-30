@@ -7,17 +7,12 @@
 
 import UIKit
 
-final class CollectionViewController: UICollectionViewController, UICollectionViewDelegateFlowLayout {
+final class CollectionViewController: UIViewController {
 
-    private let data = (1...30).map { "Item \($0)" }
+    private let carousel = CarouselView(withFrame: .zero, andInset: 16)
 
     init() {
-        let layout = UICollectionViewFlowLayout()
-        layout.itemSize = CGSize(width: 100, height: 100)
-        layout.minimumLineSpacing = 16
-        layout.minimumInteritemSpacing = 16
-        layout.sectionInset = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
-        super.init(collectionViewLayout: layout)
+        super.init(nibName: nil, bundle: nil)
     }
 
     required init?(coder: NSCoder) {
@@ -27,24 +22,52 @@ final class CollectionViewController: UICollectionViewController, UICollectionVi
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Collection View"
-        collectionView.backgroundColor = .systemBackground
-        collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "cell")
+        view.backgroundColor = .systemBackground
+        setupCarousel()
     }
 
-    override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        data.count
+    private func setupCarousel() {
+        carousel.backgroundColor = .clear
+
+        carousel.delegate = self
+        carousel.dataSource = self
+        carousel.register(FavoritesMovieCell.self, forCellWithReuseIdentifier: "FavoritesMovieCell")
+        carousel.showsHorizontalScrollIndicator = false
+        carousel.itemSpacing = 12
+
+        view.addSubview(carousel)
+
+        carousel.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            carousel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            carousel.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            carousel.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            carousel.heightAnchor.constraint(equalToConstant: 252)
+        ])
+    }
+}
+
+// MARK: - UICollectionViewDataSource
+extension CollectionViewController: UICollectionViewDataSource {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return 12
     }
 
-    override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath)
-        cell.backgroundColor = .systemTeal
-        cell.layer.cornerRadius = 8
-
-        let label = UILabel(frame: cell.contentView.bounds)
-        label.text = data[indexPath.item]
-        label.textAlignment = .center
-        label.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        cell.contentView.addSubview(label)
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "FavoritesMovieCell", for: indexPath) as! FavoritesMovieCell
+        cell.configure()
         return cell
+    }
+}
+
+// MARK: - UICollectionViewDelegateFlowLayout
+extension CollectionViewController: UICollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(width: collectionView.frame.width * 0.35, height: collectionView.frame.height / 1.1)
+    }
+
+    // Для плавного скролла
+    func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+        carousel.scrollViewWillEndDragging(scrollView, withVelocity: velocity, targetContentOffset: targetContentOffset)
     }
 }
