@@ -11,7 +11,7 @@ final class ShowCell: UITableViewCell {
 
     // MARK: - UI Elements
 
-    private let colorView = UIView()
+    private let posterImageView = UIImageView()
     private let titleLabel = UILabel()
     private let infoLabel = UILabel()
     private let genreLabel = UILabel()
@@ -19,6 +19,11 @@ final class ShowCell: UITableViewCell {
     private let ratingLabel = UILabel()
     private let textStack = UIStackView()
     private let mainContainer = UIView()
+    
+    // MARK: - Properties
+    
+    private var currentImageName: String?
+    private var loadTask: Task<Void, Never>?
 
     // MARK: - Initialization
 
@@ -31,6 +36,16 @@ final class ShowCell: UITableViewCell {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        // Отменяем предыдущую задачу загрузки при переиспользовании ячейки
+        loadTask?.cancel()
+        loadTask = nil
+        currentImageName = nil
+        posterImageView.image = nil
+        posterImageView.backgroundColor = .systemGray5
+    }
 
     // MARK: - Configuration
 
@@ -42,12 +57,34 @@ final class ShowCell: UITableViewCell {
 
         ratingContainer.backgroundColor = RatingColor.color(for: show.rating)
 
-        colorView.backgroundColor = UIColor(
-            red: .random(in: 0...1),
-            green: .random(in: 0...1),
-            blue: .random(in: 0...1),
-            alpha: 1
-        )
+        // Отменяем предыдущую задачу если есть
+        loadTask?.cancel()
+        
+        // Устанавливаем плейсхолдер
+        posterImageView.image = nil
+        posterImageView.backgroundColor = .systemGray5
+        currentImageName = show.imageName
+        
+        // Начинаем асинхронную загрузку
+        loadTask = Task { [weak self] in
+            guard let self = self else { return }
+            
+            let image = await RemoteDataSource.shared.loadImage(imageName: show.imageName)
+            
+            // Проверяем что ячейка все еще показывает тот же фильм и задача не отменена
+            guard !Task.isCancelled,
+                  self.currentImageName == show.imageName else {
+                return
+            }
+            
+            await MainActor.run {
+                // Дополнительная проверка на случай если ячейка была переиспользована
+                guard self.currentImageName == show.imageName else { return }
+                
+                self.posterImageView.image = image
+                self.posterImageView.backgroundColor = image != nil ? .clear : .systemGray5
+            }
+        }
     }
 }
 
@@ -56,7 +93,7 @@ final class ShowCell: UITableViewCell {
 private extension ShowCell {
 
     func setupViews() {
-        setupColorView()
+        setupImageView()
         setupTitleLabel()
         setupInfoLabel()
         setupGenreLabel()
@@ -68,17 +105,19 @@ private extension ShowCell {
     }
 
     func setupConstraints() {
-        setupColorViewConstraints()
+        setupImageViewConstraints()
         setupMainContainerConstraints()
         setupTextStackConstraints()
         setupRatingContainerConstraints()
         setupRatingLabelConstraints()
     }
 
-    func setupColorView() {
-        colorView.layer.cornerRadius = 4
-        colorView.clipsToBounds = true
-        colorView.translatesAutoresizingMaskIntoConstraints = false
+    func setupImageView() {
+        posterImageView.contentMode = .scaleToFill
+        posterImageView.layer.cornerRadius = 4
+        posterImageView.clipsToBounds = true
+        posterImageView.backgroundColor = .systemGray5
+        posterImageView.translatesAutoresizingMaskIntoConstraints = false
     }
 
     func setupTitleLabel() {
@@ -129,25 +168,25 @@ private extension ShowCell {
     }
 
     func addSubviews() {
-        contentView.addSubview(colorView)
+        contentView.addSubview(posterImageView)
         contentView.addSubview(mainContainer)
     }
 
-    func setupColorViewConstraints() {
+    func setupImageViewConstraints() {
         NSLayoutConstraint.activate([
-            colorView.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 0.3),
-            colorView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            colorView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
-            colorView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8)
+            posterImageView.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 0.3),
+            posterImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            posterImageView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
+            posterImageView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8)
         ])
     }
 
     func setupMainContainerConstraints() {
         NSLayoutConstraint.activate([
-            mainContainer.leadingAnchor.constraint(equalTo: colorView.trailingAnchor, constant: 16),
+            mainContainer.leadingAnchor.constraint(equalTo: posterImageView.trailingAnchor, constant: 16),
             mainContainer.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            mainContainer.topAnchor.constraint(equalTo: colorView.topAnchor),
-            mainContainer.bottomAnchor.constraint(equalTo: colorView.bottomAnchor)
+            mainContainer.topAnchor.constraint(equalTo: posterImageView.topAnchor),
+            mainContainer.bottomAnchor.constraint(equalTo: posterImageView.bottomAnchor)
         ])
     }
 

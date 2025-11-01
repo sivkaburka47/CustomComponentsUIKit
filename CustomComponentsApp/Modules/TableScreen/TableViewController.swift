@@ -11,12 +11,7 @@ final class TableViewController: UITableViewController {
 
     // MARK: - Properties
 
-    private var data: [Show] = [
-        Show(title: "Люцифер", year: 1999, country: "США", rating: 9.0, genres: ["драма", "криминал"]),
-        Show(title: "Люцифер", year: 1999, country: "США", rating: 6.5, genres: ["фэнтези", "драма"]),
-        Show(title: "Люцифер", year: 1999, country: "США", rating: 7.2, genres: ["комедия", "драма"]),
-        Show(title: "Люцифер", year: 1999, country: "США", rating: 4.3, genres: ["боевик", "триллер"])
-    ]
+    private var data: [Show] = []
 
     // MARK: - Lifecycle
 
@@ -24,6 +19,20 @@ final class TableViewController: UITableViewController {
         super.viewDidLoad()
         setupNavigation()
         setupTableView()
+        loadShows()
+    }
+    
+    private func loadShows() {
+        Task {
+            do {
+                data = try await RemoteDataSource.shared.fetchShows()
+                await MainActor.run {
+                    tableView.reloadData()
+                }
+            } catch {
+                print("Ошибка загрузки данных: \(error)")
+            }
+        }
     }
 }
 
@@ -42,6 +51,26 @@ extension TableViewController {
     }
 }
 
+// MARK: - UITableViewDataSourcePrefetching
+
+extension TableViewController: UITableViewDataSourcePrefetching {
+    func tableView(_ tableView: UITableView, prefetchRowsAt indexPaths: [IndexPath]) {
+        for indexPath in indexPaths {
+            guard indexPath.row < data.count else { continue }
+            let show = data[indexPath.row]
+            RemoteDataSource.shared.prefetchImage(imageName: show.imageName)
+        }
+    }
+    
+    func tableView(_ tableView: UITableView, cancelPrefetchingForRowsAt indexPaths: [IndexPath]) {
+        for indexPath in indexPaths {
+            guard indexPath.row < data.count else { continue }
+            let show = data[indexPath.row]
+            RemoteDataSource.shared.cancelPrefetch(imageName: show.imageName)
+        }
+    }
+}
+
 // MARK: - Setup Methods
 
 private extension TableViewController {
@@ -54,5 +83,6 @@ private extension TableViewController {
         tableView.rowHeight = 200
         tableView.separatorStyle = .none
         tableView.register(ShowCell.self, forCellReuseIdentifier: "ShowCell")
+        tableView.prefetchDataSource = self
     }
 }

@@ -10,6 +10,7 @@ import UIKit
 final class CollectionViewController: UIViewController {
 
     private let carousel = CarouselView(withFrame: .zero, andInset: 16)
+    private var shows: [Show] = []
 
     init() {
         super.init(nibName: nil, bundle: nil)
@@ -24,6 +25,20 @@ final class CollectionViewController: UIViewController {
         title = "Collection View"
         view.backgroundColor = .systemBackground
         setupCarousel()
+        loadShows()
+    }
+    
+    private func loadShows() {
+        Task {
+            do {
+                shows = try await RemoteDataSource.shared.fetchShows()
+                await MainActor.run {
+                    carousel.reloadData()
+                }
+            } catch {
+                print("Ошибка загрузки данных: \(error)")
+            }
+        }
     }
 
     private func setupCarousel() {
@@ -31,6 +46,7 @@ final class CollectionViewController: UIViewController {
 
         carousel.delegate = self
         carousel.dataSource = self
+        carousel.prefetchDataSource = self
         carousel.register(FavoritesMovieCell.self, forCellWithReuseIdentifier: "FavoritesMovieCell")
         carousel.showsHorizontalScrollIndicator = false
         carousel.itemSpacing = 12
@@ -50,13 +66,32 @@ final class CollectionViewController: UIViewController {
 // MARK: - UICollectionViewDataSource
 extension CollectionViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 12
+        return shows.count
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "FavoritesMovieCell", for: indexPath) as! FavoritesMovieCell
-        cell.configure()
+        cell.configure(with: shows[indexPath.item])
         return cell
+    }
+}
+
+// MARK: - UICollectionViewDataSourcePrefetching
+extension CollectionViewController: UICollectionViewDataSourcePrefetching {
+    func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
+        for indexPath in indexPaths {
+            guard indexPath.item < shows.count else { continue }
+            let show = shows[indexPath.item]
+            RemoteDataSource.shared.prefetchImage(imageName: show.imageName)
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cancelPrefetchingForItemsAt indexPaths: [IndexPath]) {
+        for indexPath in indexPaths {
+            guard indexPath.item < shows.count else { continue }
+            let show = shows[indexPath.item]
+            RemoteDataSource.shared.cancelPrefetch(imageName: show.imageName)
+        }
     }
 }
 

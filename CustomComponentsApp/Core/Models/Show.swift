@@ -13,4 +13,5 @@ struct Show {
     let country: String
     let rating: Double
     let genres: [String]
+    let imageName: String
 }

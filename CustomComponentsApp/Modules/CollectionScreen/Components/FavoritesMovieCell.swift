@@ -10,6 +10,8 @@ import UIKit
 class FavoritesMovieCell: CarouselCell {
 
     private let imageView = UIImageView()
+    private var currentImageName: String?
+    private var loadTask: Task<Void, Never>?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -30,11 +32,22 @@ class FavoritesMovieCell: CarouselCell {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        // Отменяем предыдущую задачу загрузки при переиспользовании ячейки
+        loadTask?.cancel()
+        loadTask = nil
+        currentImageName = nil
+        imageView.image = nil
+        imageView.backgroundColor = .systemGray5
+    }
 
     private func setupViews() {
-        imageView.contentMode = .scaleAspectFill
+        imageView.contentMode = .scaleToFill
         imageView.layer.cornerRadius = 8
         imageView.clipsToBounds = true
+        imageView.backgroundColor = .systemGray5
 
         mainView.addSubview(imageView)
 
@@ -47,12 +60,32 @@ class FavoritesMovieCell: CarouselCell {
         ])
     }
 
-    func configure() {
-        imageView.backgroundColor = UIColor(
-            red: CGFloat.random(in: 0...1),
-            green: CGFloat.random(in: 0...1),
-            blue: CGFloat.random(in: 0...1),
-            alpha: 1.0
-        )
+    func configure(with show: Show) {
+        // Отменяем предыдущую задачу если есть
+        loadTask?.cancel()
+
+        imageView.image = nil
+        imageView.backgroundColor = .systemGray5
+        currentImageName = show.imageName
+
+        loadTask = Task { [weak self] in
+            guard let self = self else { return }
+            
+            let image = await RemoteDataSource.shared.loadImage(imageName: show.imageName)
+            
+            // Проверяем что ячейка все еще показывает тот же фильм и задача не отменена
+            guard !Task.isCancelled,
+                  self.currentImageName == show.imageName else {
+                return
+            }
+            
+            await MainActor.run {
+                // Доп проверка на случай если ячейка была переиспользована
+                guard self.currentImageName == show.imageName else { return }
+                
+                self.imageView.image = image
+                self.imageView.backgroundColor = image != nil ? .clear : .systemGray5
+            }
+        }
     }
 }
